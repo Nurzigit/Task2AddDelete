@@ -1,118 +1,105 @@
+import React from "react";
 import "./App.css";
 
-// button-group
-const buttons = [
-  {
-    type: "all",
-    label: "All",
-  },
-  {
-    type: "active",
-    label: "Active",
-  },
-  {
-    type: "done",
-    label: "Done",
-  },
-];
+const App = () => {
+  const [todos, setTodos] = React.useState([]);
+  const [todo, setTodo] = React.useState("");
+  const [todoEditing, setTodoEditing] = React.useState(null);
+  const [editingText, setEditingText] = React.useState("");
 
-const items = [
-  {
-    key: 1,
-    label: "Have fun",
-  },
-  {
-    key: 2,
-    label: "Spread Empathy",
-  },
-  {
-    key: 3,
-    label: "Generate Value",
-  },
-];
+  React.useEffect(() => {
+    const json = localStorage.getItem("todos");
+    const loadedTodos = JSON.parse(json);
+    if (loadedTodos) {
+      setTodos(loadedTodos);
+    }
+  }, []);
 
-function App() {
+  React.useEffect(() => {
+    const json = JSON.stringify(todos);
+    localStorage.setItem("todos", json);
+  }, [todos]);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    const newTodo = {
+      id: new Date().getTime(),
+      text: todo,
+      completed: false,
+    };
+    setTodos([...todos].concat(newTodo));
+    setTodo("");
+  }
+
+  function deleteTodo(id) {
+    let updatedTodos = [...todos].filter((todo) => todo.id !== id);
+    setTodos(updatedTodos);
+  }
+
+  function toggleComplete(id) {
+    let updatedTodos = [...todos].map((todo) => {
+      if (todo.id === id) {
+        todo.completed = !todo.completed;
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+  }
+
+  function submitEdits(id) {
+    const updatedTodos = [...todos].map((todo) => {
+      if (todo.id === id) {
+        todo.text = editingText;
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+    setTodoEditing(null);
+  }
+
   return (
-    <div className="todo-app">
-      {/* App-header */}
-      <div className="app-header d-flex">
+      <div id="todo-list">
         <h1>Todo List</h1>
-        <h2>5 more to do, 2 done</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+              type="text"
+              onChange={(e) => setTodo(e.target.value)}
+              value={todo}
+          />
+          <button type="submit">Add Todo</button>
+        </form>
+        {todos.map((todo) => (
+            <div key={todo.id} className="todo">
+              <div className="todo-text">
+                <input
+                    type="checkbox"
+                    id="completed"
+                    checked={todo.completed}
+                    onChange={() => toggleComplete(todo.id)}
+                />
+                {todo.id === todoEditing ? (
+                    <input
+                        type="text"
+                        onChange={(e) => setEditingText(e.target.value)}
+                    />
+                ) : (
+                    <div>{todo.text}</div>
+                )}
+              </div>
+              <div className="todo-actions">
+                {todo.id === todoEditing ? (
+                    <button onClick={() => submitEdits(todo.id)}>Submit Edits</button>
+                ) : (
+                    <button onClick={() => setTodoEditing(todo.id)}>Edit</button>
+                )}
+
+                <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+              </div>
+            </div>
+        ))}
       </div>
-
-      <div className="top-panel d-flex">
-        {/* Search-panel */}
-        <input
-          type="text"
-          className="form-control search-input"
-          placeholder="type to search"
-        />
-        {/* Item-status-filter */}
-        <div className="btn-group">
-          <button type="button" className="btn  btn-info">
-            All
-          </button>
-          <button type="button" className="btn btn-outline-info">
-            Active
-          </button>
-          <button type="button" className="btn btn-outline-info">
-            Done
-          </button>
-        </div>
-      </div>
-
-      {/* List-group */}
-      <ul className="list-group todo-list">
-        <li className="list-group-item">
-          <span className="todo-list-item">
-            <span className="todo-list-item-label">Have Fun</span>
-
-            <button
-              type="button"
-              className="btn btn-outline-success btn-sm float-right"
-            >
-              <i className="fa fa-exclamation" />
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-outline-danger btn-sm float-right"
-            >
-              <i className="fa fa-trash-o" />
-            </button>
-          </span>
-        </li>
-        <li className="list-group-item">
-          <span className="todo-list-item done">
-            <span className="todo-list-item-label">Spread Empathy</span>
-
-            <button
-              type="button"
-              className="btn btn-outline-success btn-sm float-right"
-            >
-              <i className="fa fa-exclamation" />
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-outline-danger btn-sm float-right"
-            >
-              <i className="fa fa-trash-o" />
-            </button>
-          </span>
-        </li>
-      </ul>
-
-      <div className="item-add-form d-flex">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="What needs to be done"
-        />
-        <button className="btn btn-outline-secondary">Add item</button>
-      </div>
-    </div>
   );
-}
+};
 
 export default App;
